@@ -23,6 +23,6 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false
+      selfHeal: true # chart-managed resources; nobody hand-patches these live
     syncOptions:
       - CreateNamespace=true

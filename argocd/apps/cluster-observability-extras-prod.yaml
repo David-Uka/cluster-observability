@@ -15,6 +15,6 @@ spec:
   syncPolicy:
     automated:
       prune: true
-      selfHeal: false
+      selfHeal: false # PrometheusRule/dashboards get hand-patched mid-incident (e.g. silencing a bad alert); dont auto-revert that
     syncOptions:
       - CreateNamespace=true
