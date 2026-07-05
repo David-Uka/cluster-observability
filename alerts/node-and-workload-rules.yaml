@@ -1,0 +1,56 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cluster-observability-alerts
+  labels:
+    release: kube-prometheus-stack  # must match the Helm release label the operator watches for
+spec:
+  groups:
+    - name: node-health
+      rules:
+        - alert: HighNodeCPUUsage
+          expr: 100 * (1 - avg by (node) (rate(node_cpu_seconds_total{mode="idle"}[5m]))) > 85
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node {{ $labels.node }} CPU usage above 85%"
+            description: "Node {{ $labels.node }} has averaged >85% CPU utilization for 10 minutes."
+
+        - alert: HighNodeMemoryUsage
+          expr: 100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 90
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Node {{ $labels.node }} memory usage above 90%"
+            description: "Node {{ $labels.node }} has less than 10% memory available for 5 minutes."
+
+        - alert: PersistentVolumeSpaceLow
+          expr: 100 * (kubelet_volume_stats_available_bytes / kubelet_volume_stats_capacity_bytes) < 10
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "PVC {{ $labels.namespace }}/{{ $labels.persistentvolumeclaim }} below 10% free"
+            description: "Volume has less than 10% free space and needs attention before it fills."
+
+    - name: workload-health
+      rules:
+        - alert: PodCrashLooping
+          expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} is crash looping"
+            description: "Container {{ $labels.container }} restarted more than 3 times in 15 minutes."
+
+        - alert: PodNotReady
+          expr: sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown"}) > 0
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.namespace }}/{{ $labels.pod }} not ready"
+            description: "Pod has been Pending or Unknown for more than 15 minutes."

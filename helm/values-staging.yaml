@@ -1,0 +1,9 @@
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    resources:
+      requests: { cpu: 150m, memory: 384Mi }
+      limits: { cpu: 350m, memory: 768Mi }
+
+grafana:
+  replicas: 1
