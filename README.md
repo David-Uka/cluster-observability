@@ -31,8 +31,11 @@ feature: chart from the `prometheus-community` Helm repo, values from this git
 repo. Bump `targetRevision` (chart version) deliberately in
 `argocd/apps/kube-prometheus-stack-*.yaml` — it's pinned, not floating on latest.
 
-`prod` has `selfHeal: false`. Prometheus config changes in prod should go
-through a PR + manual sync in ArgoCD, not silently auto-revert/auto-apply.
+`prod`'s chart Application (`kube-prometheus-stack-prod`) has `selfHeal: true`
+— config drift there self-heals automatically like dev/staging.
+`cluster-observability-extras-prod` (dashboards + `PrometheusRule`) keeps
+`selfHeal: false`, since the `PrometheusRule` sometimes gets hand-patched
+mid-incident and shouldn't get silently reverted.
 
 ## Adding a dashboard or alert
 
